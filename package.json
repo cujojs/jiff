@@ -1,0 +1,23 @@
+{
+  "name": "jiff",
+  "version": "0.1.0",
+  "description": "JSON diff and patch based on rfc6902",
+  "main": "jiff",
+  "scripts": {
+    "test": "buster-test -e node"
+  },
+  "keywords": [
+    "json",
+    "json patch",
+    "diff",
+    "patch",
+    "json pointer"
+  ],
+  "author": "brian@hovercraftstudios.com",
+  "license": "MIT",
+  "devDependencies": {
+    "jshint": "~2",
+    "buster": "~0.7",
+    "gent": "~0.6"
+  }
+}
