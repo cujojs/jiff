@@ -9,6 +9,7 @@
   "keywords": [
     "json",
     "json patch",
+    "rfc6902",
     "diff",
     "patch",
     "json pointer"

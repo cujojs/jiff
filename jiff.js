@@ -3,44 +3,35 @@
 /** @author John Hann */
 
 var lcs = require('./lib/lcs');
+var patch = require('./lib/jsonPatch');
 var jsonPointer = require('./lib/jsonPointer');
 var encodeSegment = jsonPointer.encodeSegment;
 
 exports.diff = diff;
-exports.patch = patch;
-exports.clone = clone;
+exports.patch = patch.apply;
 
-var jsonDateRx = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}(?:\.\d*)?)(Z|([+\-])(\d{2}):(\d{2}))$/;
+/**
+ * Compute a JSON Patch representing the differences between a and b.
+ * @param {object|array|string|number} a
+ * @param {object|array|string|number} b
+ * @param {function} hasher hashing function that will be used to
+ *  recognize identical objects
+ * @returns {array} JSON Patch such that patch(diff(a, b), a) === b
+ */
+function diff(a, b, hasher) {
+	var hash = typeof hasher === 'function' ? hasher : defaultHash;
+	var state = { patch: [], hash: hash };
 
-var ops = {
-	add: add,
-	replace: setValue,
-	remove: remove,
-	move: move
-};
-
-function clone(x) {
-	return JSON.parse(JSON.stringify(x), dateReviver);
+	return appendChanges(a, b, '', state).patch.reverse();
 }
 
-function diff(x1, x2, hasher) {
-	var hash = typeof hasher === 'function' ? hasher : defaultHash
-	var state = {
-		patch: [],
-		hash: hash,
-		equals: hashEquals(hash)
-	};
-
-	return appendChanges(x1, x2, '', state).patch.reverse();
-}
-
-function appendChanges(x1, x2, path, state) {
-	if(Array.isArray(x2)) {
-		return appendListChanges(x1, x2, path, state);
-	} else if(x2 && typeof x2 === 'object') {
-		return appendObjectChanges(x1, x2, path, state);
+function appendChanges(a, b, path, state) {
+	if(Array.isArray(b)) {
+		return appendListChanges(a, b, path, state);
+	} else if(b && typeof b === 'object') {
+		return appendObjectChanges(a, b, path, state);
 	} else {
-		return appendValueChanges(x1, x2, path, state);
+		return appendValueChanges(a, b, path, state);
 	}
 }
 
@@ -74,15 +65,18 @@ function appendObjectChanges(o1, o2, path, state) {
 }
 
 function appendListChanges(a1, a2, path, state) {
-	var lcsMatrix = lcs.compare(a1, a2, state.equals);
-	return toPatch(a1, a2, lcsMatrix, path, state);
+	var a1hash = a1.map(state.hash);
+	var a2hash = a2.map(state.hash);
+
+	var lcsMatrix = lcs.compare(a1hash, a2hash);
+
+	return lcsToJsonPatch(a1, a2, path, state, lcsMatrix);
 }
 
-function toPatch(a1, a2, lcsMatrix, path, state) {
-	// TODO: Coalesce adjacent remove+add into replace
+function lcsToJsonPatch(a1, a2, path, state, lcsMatrix) {
 	lcs.reduce(function(state, op, i, j) {
 		var last, p;
-		if (op.status == lcs.DELETION) {
+		if (op.type == lcs.REMOVE) {
 			last = state.patch[state.patch.length-1];
 			p = path + '/' + j;
 			if(last !== void 0 && last.op === 'add' && last.path === p) {
@@ -94,7 +88,7 @@ function toPatch(a1, a2, lcsMatrix, path, state) {
 					value: void 0
 				});
 			}
-		} else if (op.status == lcs.INSERTION) {
+		} else if (op.type == lcs.ADD) {
 			state.patch.push({
 				op: 'add',
 				path: path + '/' + j,
@@ -110,83 +104,19 @@ function toPatch(a1, a2, lcsMatrix, path, state) {
 	return state;
 }
 
-function appendValueChanges(before, after, path, state) {
-	if(before !== after) {
+function appendValueChanges(a, b, path, state) {
+	if(a !== b) {
 		state.patch.push({
 			op: 'replace',
 			path: path,
-			value: after
+			value: b
 		});
 	}
 
 	return state;
 }
 
-function patch(changes, x) {
-	return doPatch(ops, changes, x);
-}
-
-function doPatch(ops, changes, x) {
-	if(!changes || changes.length === 0) {
-		return x;
-	}
-
-	return changes.reduce(function(x, change) {
-		var op;
-		if(change.path.length === 0) {
-			return change.value;
-		}
-
-		op = ops[change.op];
-		if(op) {
-			op(x, change);
-		}
-
-		return x;
-	}, x);
-}
-
-function add(x, change) {
-	var value = typeof change.value === 'object' ? clone(change.value) : change.value;
-	jsonPointer.add(x, change.path, value);
-}
-
-function setValue(x, change) {
-	var value = typeof change.value === 'object' ? clone(change.value) : change.value;
-	jsonPointer.setValue(x, change.path, value);
-}
-
-function remove(x, change) {
-	jsonPointer.remove(x, change.path);
-}
-
-function move(x, change, shadow) {
-	jsonPointer.setValue(x, change.path, jsonPointer.getValue(shadow, change.from));
-}
-
-function dateReviver(_, value) {
-	var match;
-
-	if (typeof value === 'string') {
-		match = jsonDateRx.exec(value);
-		if (match) {
-			return new Date(Date.UTC(
-					+match[1], +match[2] - 1, +match[3],
-					+match[4], +match[5], +match[6])
-			);
-		}
-	}
-
-	return value;
-}
-
 function defaultHash(x, i) {
 	return x !== null && typeof x === 'object' && 'id' in x
 		? x.id : JSON.stringify(x);
-}
-
-function hashEquals(hash) {
-	return function(a, b) {
-		return hash(a) === hash(b);
-	}
 }
