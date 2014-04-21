@@ -28,7 +28,7 @@ If provided, the optional `hashFunction` will be used to recognize when two obje
 var b = jiff.patch(patch, a);
 ```
 
-Given a patch created with `jiff.diff`, apply it to `a` and return the patched JSON object/array/value.
+Given an rfc6902 JSON Patch containing only `add`, `replace`, and `remove` operations, apply it to `a` and return the patched JSON object/array/value.
 
 ### clone
 
