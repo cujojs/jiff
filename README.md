@@ -20,6 +20,8 @@ var patch = jiff.diff(a, b [, hashFunction]);
 
 Computes and returns a JSON Patch from `a` to `b`: `a` and `b` must be valid JSON objects/arrays/values of the same type. If `patch` is applied to `a`, it will yield `b`.
 
+If provided, the optional `hashFunction` will be used to recognize when two objects are the same.  If not provided, `JSON.stringify` will be used.
+
 ### patch
 
 ```js
