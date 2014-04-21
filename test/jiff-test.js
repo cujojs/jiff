@@ -12,7 +12,9 @@ buster.testCase('jiff', {
 		},
 
 		'for arrays': function() {
-			assert.claim(deepEqualAfterDiffPatch(), json.array(10, gent.string(gent.integer(2, 64))), json.array(10, gent.string(gent.integer(2, 64))));
+			assert.claim(deepEqualAfterDiffPatch(),
+				json.array(10, gent.string(gent.integer(2, 64))),
+				json.array(10, gent.string(gent.integer(2, 64))));
 		},
 
 		'for arrays of objects': function() {
