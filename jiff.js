@@ -9,6 +9,7 @@ var encodeSegment = jsonPointer.encodeSegment;
 
 exports.diff = diff;
 exports.patch = patch.apply;
+exports.clone = patch.clone;
 
 /**
  * Compute a JSON Patch representing the differences between a and b.
