@@ -9,6 +9,7 @@ var encodeSegment = jsonPointer.encodeSegment;
 
 exports.diff = diff;
 exports.patch = patch.apply;
+exports.patchInPlace = patch.applyInPlace;
 exports.clone = patch.clone;
 
 // Errors
@@ -31,13 +32,15 @@ function diff(a, b, hasher) {
 }
 
 function appendChanges(a, b, path, state) {
-	if(Array.isArray(b)) {
+	if(Array.isArray(a) && Array.isArray(b)) {
 		return appendListChanges(a, b, path, state);
-	} else if(b && typeof b === 'object') {
-		return appendObjectChanges(a, b, path, state);
-	} else {
-		return appendValueChanges(a, b, path, state);
 	}
+
+	if(isValidObject(a) && isValidObject(b)) {
+		return appendObjectChanges(a, b, path, state);
+	}
+
+	return appendValueChanges(a, b, path, state);
 }
 
 function appendObjectChanges(o1, o2, path, state) {
@@ -126,7 +129,11 @@ function appendValueChanges(a, b, path, state) {
 	return state;
 }
 
-function defaultHash(x, i) {
+function defaultHash(x) {
 	return x !== null && typeof x === 'object' && 'id' in x
 		? x.id : JSON.stringify(x);
+}
+
+function isValidObject (x) {
+	return x !== null && typeof x === 'object';
 }
