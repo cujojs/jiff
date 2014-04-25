@@ -13,7 +13,7 @@ exports.clone = patch.clone;
 
 // Errors
 exports.InvalidPatchOperationError = require('./lib/InvalidPatchOperationError');
-
+exports.TestFailedError = require('./lib/TestFailedError');
 
 /**
  * Compute a JSON Patch representing the differences between a and b.
@@ -21,7 +21,7 @@ exports.InvalidPatchOperationError = require('./lib/InvalidPatchOperationError')
  * @param {object|array|string|number} b
  * @param {function} hasher hashing function that will be used to
  *  recognize identical objects
- * @returns {array} JSON Patch such that patch(diff(a, b), a) === b
+ * @returns {array} JSON Patch such that patch(diff(a, b), a) ~ b
  */
 function diff(a, b, hasher) {
 	var hash = typeof hasher === 'function' ? hasher : defaultHash;
@@ -82,8 +82,10 @@ function lcsToJsonPatch(a1, a2, path, state, lcsMatrix) {
 	lcs.reduce(function(state, op, i, j) {
 		var last, p;
 		if (op.type == lcs.REMOVE) {
-			last = state.patch[state.patch.length-1];
 			p = path + '/' + j;
+
+			// Coalesce adjacent remove + add into replace
+			last = state.patch[state.patch.length-1];
 			if(last !== void 0 && last.op === 'add' && last.path === p) {
 				last.op = 'replace';
 			} else {
@@ -94,9 +96,12 @@ function lcsToJsonPatch(a1, a2, path, state, lcsMatrix) {
 				});
 			}
 		} else if (op.type == lcs.ADD) {
+			// See https://tools.ietf.org/html/rfc6902#section-4.1
+			// Must use '-' to indicate appending to array
+			p = path + '/' + (j === a1.length ? '-' : j);
 			state.patch.push({
 				op: 'add',
-				path: path + '/' + j,
+				path: p,
 				value: a2[i]
 			});
 		} else {

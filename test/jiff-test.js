@@ -2,6 +2,8 @@ var buster = require('buster');
 var gent = require('gent');
 var json = require('gent/generator/json');
 var assert = buster.assert;
+var refute = buster.refute;
+var deepEquals = require('../lib/deepEquals');
 
 var jiff = require('../jiff');
 
@@ -129,6 +131,58 @@ buster.testCase('jiff', {
 				jiff.patch([{ op: 'replace', path: '/a', value: 1 }], void 0);
 			}, 'InvalidPatchOperationError');
 		}
+	},
+
+	'move': {
+		'should move': function() {
+			var a = { x: 1 };
+			var result = jiff.patch([{ op: 'move', path: '/y', from: '/x' }], a);
+			assert.equals(result.y, 1);
+			refute.defined(result.x);
+		}
+	},
+
+	'copy': {
+		'should copy': function() {
+			var a = { x: { value: 1 } };
+			var result = jiff.patch([{ op: 'copy', path: '/y', from: '/x' }], a);
+			assert.equals(result.x.value, 1);
+			assert.equals(result.y.value, 1);
+			refute.same(result.x, result.y);
+		}
+	},
+
+	'test': {
+		'should pass when values are deep equal': function() {
+			var test = {
+				num: 1,
+				string: 'bar',
+				bool: true,
+				array: [1, { name: 'x' }, 'baz', true, false, null],
+				object: {
+					value: 2
+				}
+			};
+			var a = { x: test };
+			var y = jiff.clone(test);
+
+			refute.exception(function() {
+				var result = jiff.patch([{ op: 'test', path: '/x', value: y }], a);
+				assert.equals(JSON.stringify(a), JSON.stringify(result));
+			});
+		},
+
+		'should fail when values are not deep equal': function() {
+			var test = { array: [1, { name: 'x' }] };
+			var y = jiff.clone(test);
+
+			test.array[1].name = 'y';
+			var a = { x: test };
+
+			assert.exception(function() {
+				jiff.patch([{ op: 'test', path: '/x', value: y }], a);
+			}, 'TestFailedError');
+		}
 	}
 });
 
@@ -136,54 +190,6 @@ function deepEqualAfterDiffPatch(hasher) {
 	return function(a, b) {
 		var p = jiff.diff(a, b, hasher);
 		var b2 = jiff.patch(p, a);
-		return deepEqualJson(b, b2);
+		return deepEquals(b, b2);
 	};
-}
-
-function deepEqualJson(a, b) {
-	if(a === b) {
-		return true;
-	}
-
-	if(Array.isArray(a) && Array.isArray(b)) {
-		return compareArrays(a, b);
-	}
-
-	if(typeof a === 'object' && typeof b === 'object') {
-		return compareObjects(a, b);
-	}
-
-	return false;
-}
-
-function compareArrays(a, b) {
-	if(a.length !== b.length) {
-		return false;
-	}
-
-	for(var i = 0; i<a.length; ++i) {
-		if(!deepEqualJson(a[i], b[i])) {
-			return false;
-		}
-	}
-
-	return true;
-}
-
-function compareObjects(a, b) {
-	var akeys = Object.keys(a);
-	var bkeys = Object.keys(b);
-
-	if(akeys.length !== bkeys.length) {
-		return false;
-	}
-
-	for(var i = 0, k; i<akeys.length; ++i) {
-		k = akeys[i];
-		if(!(k in b && deepEqualJson(a[k], b[k]))) {
-			return false;
-		}
-	}
-
-	return true;
 }
