@@ -38,6 +38,10 @@ var b = jiff.clone(a);
 
 Creates a deep copy of `a`, which must be a valid JSON object/array/value.
 
+### InvalidPatchOperationError
+
+When any invalid patch operation is encountered, jiff will throw an `InvalidPatchOperationError`.  Invalid patch operations are outlined in sections 4.x in RFC 6902.
+
 ## License
 
 MIT
