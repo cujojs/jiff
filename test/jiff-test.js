@@ -48,6 +48,87 @@ buster.testCase('jiff', {
 				json.array(1, json.object())
 			);
 		}
+	},
+
+	'add': {
+		'should add': function() {
+			var a = {};
+			var result = jiff.patch([{ op: 'add', path: '/value', value: 1 }], a);
+			assert.equals(result.value, 1);
+		},
+
+		'should replace': function() {
+			var a = { value: 0 };
+			var result = jiff.patch([{ op: 'add', path: '/value', value: 1 }], a);
+			assert.equals(result.value, 1);
+		},
+
+		'should throw': {
+			'when path is invalid': function() {
+				assert.exception(function() {
+					jiff.patch([{ op: 'add', path: '/a/b', value: 1 }], {});
+				}, 'InvalidPatchOperationError');
+			},
+
+			'when target is null': function() {
+				assert.exception(function() {
+					jiff.patch([{ op: 'add', path: '/a', value: 1 }], null);
+				}, 'InvalidPatchOperationError');
+			},
+
+			'when target is undefined': function() {
+				assert.exception(function() {
+					jiff.patch([{ op: 'add', path: '/a', value: 1 }], void 0);
+				}, 'InvalidPatchOperationError');
+			},
+
+			'when target is not an object or array': function() {
+				assert.exception(function() {
+					jiff.patch([{ op: 'add', path: '/a/b', value: 1 }], { a: 0 });
+				}, 'InvalidPatchOperationError');
+			}
+		}
+	},
+
+
+	'should throw when op is remove': {
+		'and path is invalid': function() {
+			assert.exception(function() {
+				jiff.patch([{ op: 'remove', path: '/a', value: 1 }], {});
+			}, 'InvalidPatchOperationError');
+		},
+
+		'and target is null': function() {
+			assert.exception(function() {
+				jiff.patch([{ op: 'remove', path: '/a', value: 1 }], null);
+			}, 'InvalidPatchOperationError');
+		},
+
+		'and target is undefined': function() {
+			assert.exception(function() {
+				jiff.patch([{ op: 'remove', path: '/a', value: 1 }], void 0);
+			}, 'InvalidPatchOperationError');
+		}
+	},
+
+	'should throw when op is replace': {
+		'and path is invalid': function() {
+			assert.exception(function() {
+				jiff.patch([{ op: 'replace', path: '/a', value: 1 }], {});
+			}, 'InvalidPatchOperationError');
+		},
+
+		'and target is null': function() {
+			assert.exception(function() {
+				jiff.patch([{ op: 'replace', path: '/a', value: 1 }], null);
+			}, 'InvalidPatchOperationError');
+		},
+
+		'and target is undefined': function() {
+			assert.exception(function() {
+				jiff.patch([{ op: 'replace', path: '/a', value: 1 }], void 0);
+			}, 'InvalidPatchOperationError');
+		}
 	}
 });
 

@@ -11,6 +11,10 @@ exports.diff = diff;
 exports.patch = patch.apply;
 exports.clone = patch.clone;
 
+// Errors
+exports.InvalidPatchOperationError = require('./lib/InvalidPatchOperationError');
+
+
 /**
  * Compute a JSON Patch representing the differences between a and b.
  * @param {object|array|string|number} a
