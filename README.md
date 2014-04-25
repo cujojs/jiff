@@ -1,8 +1,6 @@
 # JSON Diff and Patch
 
-Jiff is an implementation of a subset of [JSON Patch RFC6902](https://tools.ietf.org/html/rfc6902), plus a Diff implementation that generates compliant patches.
-
-It currently supports JSON Patch `add`, `replace`, and `remove` operations.  It *does not* yet support `move`, `copy`, and `test`.
+Jiff is an implementation of [JSON Patch RFC6902](https://tools.ietf.org/html/rfc6902), plus a Diff implementation that generates compliant patches.
 
 ## Get it
 
@@ -11,6 +9,26 @@ It currently supports JSON Patch `add`, `replace`, and `remove` operations.  It 
 `bower install --save jiff`
 
 ## API
+
+### patch
+
+```js
+var b = jiff.patch(patch, a);
+```
+
+Given an rfc6902 JSON Patch, apply it to `a` and return a new patched JSON object/array/value.  Patching is atomic, and is performed on a clone of `a`.  Thus, if patching fails mid-patch, `a` will still be in a consistent state.
+
+### patchInPlace
+
+```js
+var b = jiff.patchInPlace(patch, a);
+```
+
+Given an rfc6902 JSON Patch, apply it directly to `a`, *mutating `a`*.
+
+Note that this is an opt-in violation of the patching algorithm outlined in rfc6902.  It may provide some performance benefits as it avoids creating a new clone of `a` before patching.
+
+However, if patching fails mid-patch, `a` will be left in an inconsistent state.
 
 ### diff
 
@@ -22,13 +40,7 @@ Computes and returns a JSON Patch from `a` to `b`: `a` and `b` must be valid JSO
 
 If provided, the optional `hashFunction` will be used to recognize when two objects are the same.  If not provided, `JSON.stringify` will be used.
 
-### patch
-
-```js
-var b = jiff.patch(patch, a);
-```
-
-Given an rfc6902 JSON Patch containing only `add`, `replace`, and `remove` operations, apply it to `a` and return the patched JSON object/array/value.
+The diff algorithm does not generate `move`, or `copy` operations, only `add`, `remove`, and `replace`.
 
 ### clone
 
