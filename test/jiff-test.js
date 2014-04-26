@@ -53,10 +53,10 @@ buster.testCase('jiff', {
 
 	'diff': {
 		'on arrays': {
-			'should generate - for path suffix when appending': function() {
+			'should generate - or length for path suffix when appending': function() {
 				var patch = jiff.diff([], [1]);
 				assert.equals(patch[0].op, 'add');
-				assert.equals(patch[0].path, '/-');
+				assert(patch[0].path === '/-' || patch[0].path === '/0');
 				assert.same(patch[0].value, 1);
 			}
 		}
