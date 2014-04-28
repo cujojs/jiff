@@ -128,8 +128,7 @@ function appendValueChanges(a, b, path, state) {
 }
 
 function defaultHash(x) {
-	return x !== null && typeof x === 'object' && 'id' in x
-		? x.id : JSON.stringify(x);
+	return JSON.stringify(x);
 }
 
 function isValidObject (x) {

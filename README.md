@@ -33,7 +33,7 @@ b.push({ name: 'd' });
 // Generate diff (ie JSON Patch) from a to b
 var patch = jiff.diff(a, b);
 
-// [{"op":"add","path":"/-","value":{"name":"d"}},{"op":"remove","path":"/1"}]
+// [{"op":"add","path":"/3","value":{"name":"d"}},{"op":"remove","path":"/1"}]
 console.log(JSON.stringify(patch));
 
 var patched = jiff.patch(patch, a);
