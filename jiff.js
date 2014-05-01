@@ -84,7 +84,7 @@ function appendListChanges(a1, a2, path, state) {
 function lcsToJsonPatch(a1, a2, path, state, lcsMatrix) {
 	return lcs.reduce(function(state, op, i, j) {
 		var last, p;
-		if (op.type == lcs.REMOVE) {
+		if (op == lcs.REMOVE) {
 			p = path + '/' + j;
 
 			// Coalesce adjacent remove + add into replace
@@ -98,7 +98,7 @@ function lcsToJsonPatch(a1, a2, path, state, lcsMatrix) {
 					value: void 0
 				});
 			}
-		} else if (op.type == lcs.ADD) {
+		} else if (op == lcs.ADD) {
 			// See https://tools.ietf.org/html/rfc6902#section-4.1
 			// May use either index===length *or* '-' to indicate appending to array
 			state.patch.push({
