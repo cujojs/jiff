@@ -39,7 +39,7 @@ console.log(JSON.stringify(patch));
 var patched = jiff.patch(patch, a);
 
 // [{"name":"a"},{"name":"c"},{"name":"d"}]
-console.log(JSON.stringify(patched);
+console.log(JSON.stringify(patched));
 ```
 
 ## API
