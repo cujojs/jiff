@@ -1,6 +1,6 @@
 {
   "name": "jiff",
-  "version": "0.4.2",
+  "version": "0.5.0",
   "description": "JSON diff and patch based on rfc6902",
   "main": "jiff",
   "scripts": {
@@ -20,5 +20,9 @@
     "jshint": "~2",
     "buster": "~0.7",
     "gent": "0.6.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/cujojs/jiff.git"
   }
 }
