@@ -80,6 +80,19 @@ If provided, the optional `hashFunction` will be used to recognize when two obje
 
 While jiff's patch algorithm handles all the JSON Patch operations required by rfc6902, the diff algorithm currently does not generate `move`, or `copy` operations, only `add`, `remove`, and `replace`.
 
+### inverse
+
+```js
+var patchInverse = jiff.inverse(patch);
+```
+
+Compute an inverse patch.  Applying the inverse of a patch will undo the effect of the original.
+
+Due to the current JSON Patch format defined in rfc6902, not all patches can be inverted.  To be invertible, a patch must have the following characteristics:
+
+1. Each `remove` and `replace` operation must be preceded by a `test` operation that verifies the `value` at the `path` being removed/replaced.
+2. The patch must *not* contain any `copy` operations.  Read [this discussion](https://github.com/cujojs/jiff/issues/9) to understand why `copy` operations are not (yet) invertible. You achieve the same effect by using `add` instead of `copy`, albeit potentially at the cost of data size.
+
 ### clone
 
 ```js

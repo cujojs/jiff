@@ -4,17 +4,20 @@
 
 var lcs = require('./lib/lcs');
 var patch = require('./lib/jsonPatch');
+var inverse = require('./lib/inverse');
 var jsonPointer = require('./lib/jsonPointer');
 var encodeSegment = jsonPointer.encodeSegment;
 
 exports.diff = diff;
 exports.patch = patch.apply;
 exports.patchInPlace = patch.applyInPlace;
+exports.inverse = inverse;
 exports.clone = patch.clone;
 
 // Errors
 exports.InvalidPatchOperationError = require('./lib/InvalidPatchOperationError');
 exports.TestFailedError = require('./lib/TestFailedError');
+exports.PatchNotInvertibleError = require('./lib/PatchNotInvertibleError');
 
 /**
  * Compute a JSON Patch representing the differences between a and b.
@@ -49,11 +52,7 @@ function appendObjectChanges(o1, o2, path, state) {
 		if(key in o1) {
 			appendChanges(o1[key], o2[key], keyPath, state);
 		} else {
-			state.patch.push({
-				op: 'add',
-				path: keyPath,
-				value: o2[key]
-			});
+			state.patch.push({ op: 'add', path: keyPath, value: o2[key] });
 		}
 
 		return state;
@@ -61,11 +60,11 @@ function appendObjectChanges(o1, o2, path, state) {
 
 	return Object.keys(o1).reduceRight(function(state, key) {
 		if(!(key in o2)) {
-			state.patch.push({
-				op: 'remove',
-				path: path + '/' + encodeSegment(key),
-				value: void 0
-			});
+			var p = path + '/' + encodeSegment(key);
+			// remove.value is for monomorphism, not strictly necessary
+			state.patch.push({ op: 'remove', path: p, value: void 0 });
+			state.patch.push({ op: 'test',   path: p, value: o1[key] });
+
 		}
 
 		return state;
@@ -92,20 +91,15 @@ function lcsToJsonPatch(a1, a2, path, state, lcsMatrix) {
 			if(last !== void 0 && last.op === 'add' && last.path === p) {
 				last.op = 'replace';
 			} else {
-				state.patch.push({
-					op: 'remove',
-					path: p,
-					value: void 0
-				});
+				state.patch.push({ op: 'remove', path: p, value: void 0 });
 			}
+			state.patch.push({ op: 'test', path: p, value: a1[j] });
+
 		} else if (op == lcs.ADD) {
 			// See https://tools.ietf.org/html/rfc6902#section-4.1
 			// May use either index===length *or* '-' to indicate appending to array
-			state.patch.push({
-				op: 'add',
-				path: path + '/' + j,
-				value: a2[i]
-			});
+			state.patch.push({ op: 'add', path: path + '/' + j, value: a2[i] });
+
 		} else {
 			appendChanges(a1[j], a2[i], path + '/' + j, state);
 		}
@@ -117,11 +111,8 @@ function lcsToJsonPatch(a1, a2, path, state, lcsMatrix) {
 
 function appendValueChanges(a, b, path, state) {
 	if(a !== b) {
-		state.patch.push({
-			op: 'replace',
-			path: path,
-			value: b
-		});
+		state.patch.push({ op: 'replace', path: path, value: b });
+		state.patch.push({ op: 'test',    path: path, value: a });
 	}
 
 	return state;
