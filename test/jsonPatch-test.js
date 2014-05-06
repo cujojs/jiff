@@ -1,8 +1,9 @@
 var buster = require('buster');
-var assert = buster.assert;
-var refute = buster.refute;
+var assert = buster.referee.assert;
+var refute = buster.referee.refute;
 
 var jsonPatch = require('../lib/jsonPatch');
+var InvalidPatchOperationError = require('../lib/InvalidPatchOperationError');
 
 buster.testCase('jsonPatch', {
 	'add': {
@@ -34,7 +35,7 @@ buster.testCase('jsonPatch', {
 			'when target is undefined': function() {
 				assert.exception(function() {
 					jsonPatch.apply([{ op: 'add', path: '/a', value: 1 }], void 0);
-				}, 'InvalidPatchOperationError');
+				});
 			},
 
 			'when target is not an object or array': function() {
@@ -69,7 +70,7 @@ buster.testCase('jsonPatch', {
 			'when target is undefined': function() {
 				assert.exception(function() {
 					jsonPatch.apply([{ op: 'remove', path: '/a', value: 1 }], void 0);
-				}, 'InvalidPatchOperationError');
+				});
 			}
 		}
 	},
@@ -97,7 +98,7 @@ buster.testCase('jsonPatch', {
 			'when target is undefined': function() {
 				assert.exception(function() {
 					jsonPatch.apply([{ op: 'replace', path: '/a', value: 1 }], void 0);
-				}, 'InvalidPatchOperationError');
+				});
 			}
 		}
 	},

@@ -1,6 +1,6 @@
 var buster = require('buster');
 var json = require('gent/generator/json');
-var assert = buster.assert;
+var assert = buster.referee.assert;
 var deepEquals = require('../lib/deepEquals');
 
 var inverse = require('../lib/inverse');

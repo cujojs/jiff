@@ -1,5 +1,5 @@
 var buster = require('buster');
-var assert = buster.assert;
+var assert = buster.referee.assert;
 var deepEquals = require('../lib/deepEquals');
 
 var jsonPatch = require('../lib/jsonPatch');
