@@ -38,9 +38,29 @@ buster.testCase('commute', {
 		}
 	},
 
+	'replace': {
+		'always commutes with test': function() {
+			assert.claim(function(path) {
+				var a = { op: 'replace', path: path };
+				var b = { op: 'test', path: path };
+				var commuted = patches.test.commute(a, b);
+				return deepEquals(a, commuted[1]) && deepEquals(b, commuted[0]);
+			}, path());
+		},
+
+		'always commutes with replace': function() {
+			assert.claim(function(path) {
+				var a = { op: 'replace', path: path };
+				var b = { op: 'replace', path: path };
+				var commuted = patches.test.commute(a, b);
+				return deepEquals(a, commuted[1]) && deepEquals(b, commuted[0]);
+			}, path());
+		}
+	},
+
 	'remove': {
 		'when paths are identical': {
-			'cannot from right to left with other patches': function() {
+			'cannot commute from right to left with other patches': function() {
 				assert.claim(function(op, path) {
 					var a = { op: op, path: path };
 					var b = { op: 'remove', path: path };
