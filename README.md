@@ -91,7 +91,7 @@ Compute an inverse patch.  Applying the inverse of a patch will undo the effect 
 Due to the current JSON Patch format defined in rfc6902, not all patches can be inverted.  To be invertible, a patch must have the following characteristics:
 
 1. Each `remove` and `replace` operation must be preceded by a `test` operation that verifies the `value` at the `path` being removed/replaced.
-2. The patch must *not* contain any `copy` operations.  Read [this discussion](https://github.com/cujojs/jiff/issues/9) to understand why `copy` operations are not (yet) invertible. You achieve the same effect by using `add` instead of `copy`, albeit potentially at the cost of data size.
+2. The patch must *not* contain any `copy` operations.  Read [this discussion](https://github.com/cujojs/jiff/issues/9) to understand why `copy` operations are not (yet) invertible. You can achieve the same effect by using `add` instead of `copy`, albeit potentially at the cost of data size.
 
 ### clone
 
@@ -100,6 +100,23 @@ var b = jiff.clone(a);
 ```
 
 Creates a deep copy of `a`, which must be a valid JSON object/array/value.
+
+## Experimental API
+
+### jiff/lib/commute
+
+```js
+var commute = require('jiff/lib/commute');
+var [p2c, p1c] = commute(p1, p2);
+```
+
+Given two patches `p1` and `p2`, which are intended to be applied in the order `p1` then `p2`, transform them so that they can be safely applied in the order `p2` and then `p1`.
+ 
+ Commutation is currently *highly experimental*.  It works for patch operations whose path refers to a common array ancestor by transforming array indices.  Operations that share a common object ancestor are simply swapped for now, which is likely not the right thing in most cases!
+ 
+ Commutation does attempt to detect operations that cannot be commuted, and in such cases, will throw a `TypeError`.
+
+## Errors
 
 ### InvalidPatchOperationError
 
