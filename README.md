@@ -110,7 +110,7 @@ var commute = require('jiff/lib/commute');
 var [p2c, p1c] = commute(p1, p2);
 ```
 
-Given two patches `p1` and `p2`, which are intended to be applied in the order `p1` then `p2`, transform them so that they can be safely applied in the order `p2` and then `p1`.
+Given two patches `p1` and `p2`, which are intended to be applied in the order `p1` then `p2`, transform them so that they can be safely applied in the order `p2c` and then `p1c`.
  
  Commutation is currently *highly experimental*.  It works for patch operations whose path refers to a common array ancestor by transforming array indices.  Operations that share a common object ancestor are simply swapped for now, which is likely not the right thing in most cases!
  
