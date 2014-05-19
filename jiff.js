@@ -105,14 +105,18 @@ function lcsToJsonPatch(a1, a2, path, state, lcsMatrix) {
 			if(last !== void 0 && last.op === 'add' && last.path === p) {
 				last.op = 'replace';
 			} else {
-				state.patch.push({ op: 'remove', path: p, value: void 0 });
+				state.patch.push({ op: 'remove', path: p, value: void 0,
+					context: a1.slice(Math.max(0, j-2), Math.min(a1.length, j+3))
+				});
 			}
 			state.patch.push({ op: 'test', path: p, value: a1[j] });
 
 		} else if (op === lcs.ADD) {
 			// See https://tools.ietf.org/html/rfc6902#section-4.1
 			// May use either index===length *or* '-' to indicate appending to array
-			state.patch.push({ op: 'add', path: path + '/' + j, value: a2[i] });
+			state.patch.push({ op: 'add', path: path + '/' + j, value: a2[i],
+				context: a1.slice(Math.max(0, j-2), Math.min(a1.length, j+3))
+			});
 
 		} else {
 			appendChanges(a1[j], a2[i], path + '/' + j, state);
