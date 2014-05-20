@@ -112,7 +112,7 @@ buster.testCase('jsonPatch', {
 			refute.defined(result.x);
 		},
 
-		'=>should not allow moving to ancestor path': function() {
+		'should not allow moving to ancestor path': function() {
 			var from = '/a/b/c';
 			var to = '/a/b';
 			assert.exception(function() {
