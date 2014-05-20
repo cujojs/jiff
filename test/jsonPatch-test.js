@@ -2,6 +2,7 @@ var buster = require('buster');
 var assert = buster.referee.assert;
 var refute = buster.referee.refute;
 
+var patches = require('../lib/patches');
 var jsonPatch = require('../lib/jsonPatch');
 var InvalidPatchOperationError = require('../lib/InvalidPatchOperationError');
 
@@ -109,6 +110,14 @@ buster.testCase('jsonPatch', {
 			var result = jsonPatch.apply([{ op: 'move', path: '/y', from: '/x' }], a);
 			assert.equals(result.y, 1);
 			refute.defined(result.x);
+		},
+
+		'=>should not allow moving to ancestor path': function() {
+			var from = '/a/b/c';
+			var to = '/a/b';
+			assert.exception(function() {
+				patches.move.apply({ a: { b: { c: 1 }}}, { op: 'move', from: from, path: to });
+			});
 		}
 	},
 
