@@ -101,7 +101,20 @@ var b = jiff.clone(a);
 
 Creates a deep copy of `a`, which must be a valid JSON object/array/value.
 
-## Experimental API
+## Experimental APIs
+
+### jiff/lib/rebase
+
+```js
+var rebase = require('jiff/lib/rebase');
+var patchRebased = rebase(patchHistory, patch);
+```
+
+Yes, this is `git rebase` for JSON Patch.
+
+Given a patchHistory (Array of patches), and a single patch rooted at the same starting document context, rebase patch onto patchHistory, so that it may be applied after patchHistory.
+
+Rebasing is dependent on [commutation](#jifflibcommute), and so is also *highly experimental*.  If the rebase cannot be performed, it will throw a `TypeError`.
 
 ### jiff/lib/commute
 
