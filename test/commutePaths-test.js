@@ -3,9 +3,6 @@ var assert = buster.referee.assert;
 
 var commutePaths = require('../lib/commutePaths');
 var jsonPatch = require('../lib/jsonPatch');
-var deepEquals = require('../lib/deepEquals');
-
-var doc = [0,1,2,3,4,5,6,7,8,9];
 
 buster.testCase('commutePaths', {
 
@@ -83,32 +80,16 @@ buster.testCase('commutePaths', {
 			assert.equals(rl[0].path, '/foo/0');
 			assert.equals(rl[1].path, '/foo/2/x');
 		}
-	}//,
+	},
 
-//	'when add-add, paths same length': function() {
-//		var l = { op: 'add', path: '/foo/0', value: 0 };
-//		var r = { op: 'add', path: '/foo/1', value: 1 };
-//
-//		var rl = commutePaths(l, r);
-//		assert.equals(rl[0].path, '/foo/0');
-//		assert.equals(rl[1].path, '/foo/0');
-//	},
-//
-//	'when add-remove with longer path': function() {
-//		var l = { op: 'add',    path: '/foo/1/x', value: 1 };
-//		var r = { op: 'remove', path: '/foo/0' };
-//
-//		var rl = commutePaths(l, r);
-//		assert.equals(rl[0].path, '/foo/0');
-//		assert.equals(rl[1].path, '/foo/0/x');
-//	},
-//
-//	'with add': function() {
-//		var l = { op: 'add', path: '/foo/1/x', value: 0 };
-//		var r = { op: 'add', path: '/foo/0',   value: 1 };
-//
-//		var rl = commutePaths(l, r);
-//		assert.equals(rl[0].path, '/foo/0');
-//		assert.equals(rl[1].path, '/foo/2/x');
-//	}
+	'add,add, both 0 index': function() {
+		var l = { op: 'add', path: '/foo/0', value: 1 };
+		var r = { op: 'add', path: '/foo/0', value: 0 };
+
+		var rl = commutePaths(l, r);
+		assert.equals(rl[0].path, '/foo/0');
+		assert.equals(rl[0].value, 0);
+		assert.equals(rl[1].path, '/foo/1');
+		assert.equals(rl[1].value, 1);
+	}
 });
