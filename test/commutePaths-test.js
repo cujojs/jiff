@@ -41,6 +41,15 @@ buster.testCase('commutePaths', {
 			var rl = commutePaths(l, r);
 			assert.equals(rl[0].path, '/foo/0');
 			assert.equals(rl[1].path, '/foo/0/x');
+		},
+
+		'identical path': function() {
+			var l = { op: 'add',    path: '/foo/1' };
+			var r = { op: 'remove', path: '/foo/1' };
+
+			var rl = commutePaths(l, r);
+			assert.equals(rl[0].path, '/foo/1');
+			assert.equals(rl[1].path, '/foo/1');
 		}
 	},
 
@@ -92,4 +101,5 @@ buster.testCase('commutePaths', {
 		assert.equals(rl[1].path, '/foo/1');
 		assert.equals(rl[1].value, 1);
 	}
+
 });
