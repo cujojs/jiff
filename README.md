@@ -2,7 +2,7 @@
 
 Jiff is an implementation of [JSON Patch RFC6902](https://tools.ietf.org/html/rfc6902), plus a Diff implementation that generates compliant patches.
 
-It also provides some advanced and [experimental APIs](#experimentalapis) based on patch algebra, such as [patch inverses](#inverse) ("reverse" patches), [commutation](#jifflibcommute) (patch reordering), and even [rebasing](#jifflibrebase) (moving patches from one history to another).
+It also provides advanced and [experimental APIs](#experimentalapis) based on patch algebra, such as [patch inverses](#inverse) ("reverse" patches), [commutation](#jifflibcommute) (patch reordering), and even [rebasing](#jifflibrebase) (moving patches from one history to another).
 
 ## Get it
 
