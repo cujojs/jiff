@@ -2,14 +2,7 @@
 
 Jiff is an implementation of [JSON Patch RFC6902](https://tools.ietf.org/html/rfc6902), plus a Diff implementation that generates compliant patches.
 
-It handles nuances of the RFC, such as:
-
-1. Checking for invalid paths in all operations
-1. Allowing `add` to behave like `replace` for existing paths ([See bullet 3](https://tools.ietf.org/html/rfc6902#section-4.1))
-1. Appending to arrays when path ends with `"/-"` ([See bullet 6](https://tools.ietf.org/html/rfc6902#section-4.1))
-1. Validating array indices obey [JSON Pointer rules](http://tools.ietf.org/html/rfc6901#section-4)
-1. Allowing `add` and `replace` to replace the whole document when path is `""`
-1. Deep comparisons for the `test` operation regardless of object key order (eg, if JSON documents were serialized using different key ordering algorithms)
+It also provides some advanced and [experimental APIs](#experimentalapis) based on patch algebra, such as [patch inverses](#inverse) ("reverse" patches), [commutation](#jifflibcommute) (patch reordering), and even [rebasing](#jifflibrebase) (moving patches from one history to another).
 
 ## Get it
 
