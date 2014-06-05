@@ -5,6 +5,7 @@ var refute = buster.referee.refute;
 var patches = require('../lib/patches');
 var jsonPatch = require('../lib/jsonPatch');
 var InvalidPatchOperationError = require('../lib/InvalidPatchOperationError');
+var TestFailedError = require('../lib/TestFailedError');
 
 buster.testCase('jsonPatch', {
 	'add': {
@@ -161,6 +162,40 @@ buster.testCase('jsonPatch', {
 			assert.exception(function() {
 				jsonPatch.apply([{ op: 'test', path: '/x', value: y }], a);
 			}, 'TestFailedError');
+		},
+
+		'should test whole document': {
+			'when document and value are not null': function() {
+				var doc = { a: { b: 123 } };
+				refute.exception(function() {
+					jsonPatch.apply([{ op: 'test', path: '', value: doc }], doc);
+				});
+			},
+
+			'when document and value are null': function() {
+				refute.exception(function() {
+					jsonPatch.apply([{ op: 'test', path: '', value: null }], null);
+				});
+			},
+
+			'when value is null': function() {
+				var doc = { a: { b: 123 } };
+				assert.exception(function() {
+					jsonPatch.apply([{ op: 'test', path: '', value: doc }], null);
+				}, function(e) {
+					return e instanceof TestFailedError;
+				});
+			},
+
+			'when document is null': function() {
+				var doc = { a: { b: 123 } };
+				assert.exception(function() {
+					jsonPatch.apply([{ op: 'test', path: '', value: null }], doc);
+				}, function(e) {
+					return e instanceof TestFailedError;
+				});
+			}
 		}
+
 	}
 });
