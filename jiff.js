@@ -21,10 +21,10 @@ exports.PatchNotInvertibleError = require('./lib/PatchNotInvertibleError');
 
 /**
  * Compute a JSON Patch representing the differences between a and b.
- * @param {object|array|string|number} a
- * @param {object|array|string|number} b
- * @param {function} hasher hashing function that will be used to
- *  recognize identical objects
+ * @param {object|array|string|number|null} a
+ * @param {object|array|string|number|null} b
+ * @param {?function} hasher optional hashing function that will be used to
+ *  recognize identical objects, defaults to JSON.stringify
  * @returns {array} JSON Patch such that patch(diff(a, b), a) ~ b
  */
 function diff(a, b, hasher) {
@@ -47,43 +47,57 @@ function appendChanges(a, b, path, state) {
 }
 
 function appendObjectChanges(o1, o2, path, state) {
-	state = Object.keys(o2).reduceRight(function(state, key) {
+	var keys = Object.keys(o2);
+	var patch = state.patch;
+	var i, key;
+
+	for(i=keys.length-1; i>=0; --i) {
+		key = keys[i];
 		var keyPath = path + '/' + encodeSegment(key);
-		if(key in o1) {
+		if(o1[key] !== void 0) {
 			appendChanges(o1[key], o2[key], keyPath, state);
 		} else {
-			state.patch.push({ op: 'add', path: keyPath, value: o2[key] });
+			patch.push({ op: 'add', path: keyPath, value: o2[key] });
 		}
+	}
 
-		return state;
-	}, state);
-
-	return Object.keys(o1).reduceRight(function(state, key) {
-		if(!(key in o2)) {
+	keys = Object.keys(o1);
+	for(i=keys.length-1; i>=0; --i) {
+		key = keys[i];
+		if(o2[key] === void 0) {
 			var p = path + '/' + encodeSegment(key);
 			// remove.value is for monomorphism, not strictly necessary
-			state.patch.push({ op: 'remove', path: p, value: void 0 });
-			state.patch.push({ op: 'test',   path: p, value: o1[key] });
-
+			patch.push({ op: 'remove', path: p, value: void 0 });
+			patch.push({ op: 'test',   path: p, value: o1[key] });
 		}
+	}
 
-		return state;
-	}, state);
+	return state;
 }
 
 function appendListChanges(a1, a2, path, state) {
-	var a1hash = a1.map(state.hash);
-	var a2hash = a2.map(state.hash);
+	var a1hash = map(state.hash, a1);
+	var a2hash = map(state.hash, a2);
 
 	var lcsMatrix = lcs.compare(a1hash, a2hash);
 
 	return lcsToJsonPatch(a1, a2, path, state, lcsMatrix);
 }
 
+/**
+ * Transform an lcsMatrix into JSON Patch operations and append
+ * them to state.patch, recursing into array elements as necessary
+ * @param a1
+ * @param a2
+ * @param path
+ * @param state
+ * @param lcsMatrix
+ * @returns {*}
+ */
 function lcsToJsonPatch(a1, a2, path, state, lcsMatrix) {
 	return lcs.reduce(function(state, op, i, j) {
 		var last, p;
-		if (op == lcs.REMOVE) {
+		if (op === lcs.REMOVE) {
 			p = path + '/' + j;
 
 			// Coalesce adjacent remove + add into replace
@@ -95,7 +109,7 @@ function lcsToJsonPatch(a1, a2, path, state, lcsMatrix) {
 			}
 			state.patch.push({ op: 'test', path: p, value: a1[j] });
 
-		} else if (op == lcs.ADD) {
+		} else if (op === lcs.ADD) {
 			// See https://tools.ietf.org/html/rfc6902#section-4.1
 			// May use either index===length *or* '-' to indicate appending to array
 			state.patch.push({ op: 'add', path: path + '/' + j, value: a2[i] });
@@ -119,9 +133,23 @@ function appendValueChanges(a, b, path, state) {
 }
 
 function defaultHash(x) {
-	return JSON.stringify(x);
+	return isValidObject(x) ? JSON.stringify(x) : x;
 }
 
 function isValidObject (x) {
 	return x !== null && typeof x === 'object';
+}
+
+/**
+ * Faster than Array.prototype.map
+ * @param {function} f
+ * @param {Array} a
+ * @returns {Array} new Array mapped by f
+ */
+function map(f, a) {
+	var b = new Array(a.length);
+	for(var i=0; i< a.length; ++i) {
+		b[i] = f(a[i]);
+	}
+	return b;
 }

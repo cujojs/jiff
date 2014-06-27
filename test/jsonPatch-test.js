@@ -129,6 +129,12 @@ buster.testCase('jsonPatch', {
 			assert.equals(result.x.value, 1);
 			assert.equals(result.y.value, 1);
 			refute.same(result.x, result.y);
+		},
+
+		'should not allow copying from non-existent path': function() {
+			assert.exception(function() {
+				jsonPatch.apply([{ op: 'copy', from: '/y/z', path: '/x' }], {});
+			});
 		}
 	},
 
