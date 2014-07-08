@@ -31,22 +31,21 @@ var defaultHash = patch.defaultHash;
  * @returns {array} JSON Patch such that patch(diff(a, b), a) ~ b
  */
 function diff(a, b, options) {
-	var patch = appendChanges(a, b, '', initState(options)).patch;
-	return reverse(patch);
+	return appendChanges(a, b, '', initState(options, [])).patch;
 }
 
-function initState(options) {
+function initState(options, patch) {
 	var state;
 	if(typeof options === 'object') {
 		state = {
-			patch: [],
-			hash: typeof options.hash === 'function' ? options.hash : defaultHash,
-			context: typeof options.context === 'function' ? options.context : defaultContext
+			patch: patch,
+			hash: orElse(isFunction, options.hash, defaultHash),
+			context: orElse(isFunction, options.context, defaultContext)
 		};
 	} else {
 		state = {
-			patch: [],
-			hash: typeof options === 'function' ? options : defaultHash,
+			patch: patch,
+			hash: orElse(isFunction, options, defaultHash),
 			context: defaultContext
 		};
 	}
@@ -86,9 +85,8 @@ function appendObjectChanges(o1, o2, path, state) {
 		key = keys[i];
 		if(o2[key] === void 0) {
 			var p = path + '/' + encodeSegment(key);
-			// remove.value is for monomorphism, not strictly necessary
-			patch.push({ op: 'remove', path: p, value: void 0 });
 			patch.push({ op: 'test',   path: p, value: o1[key] });
+			patch.push({ op: 'remove', path: p });
 		}
 	}
 
@@ -115,16 +113,18 @@ function appendListChanges(a1, a2, path, state) {
  * @returns {*}
  */
 function lcsToJsonPatch(a1, a2, path, state, lcsMatrix) {
+	var offset = 0;
 	return lcs.reduce(function(state, op, i, j) {
-		var last, p, context;
+		var last, context;
 		var patch = state.patch;
+		var p = path + '/' + (j + offset);
 
 		if (op === lcs.REMOVE) {
-			p = path + '/' + j;
-
 			// Coalesce adjacent remove + add into replace
 			last = patch[patch.length-1];
 			context = state.context(3, j, a1);
+
+			patch.push({ op: 'test', path: p, value: a1[j], context: context });
 
 			if(last !== void 0 && last.op === 'add' && last.path === p) {
 				last.op = 'replace';
@@ -133,17 +133,19 @@ function lcsToJsonPatch(a1, a2, path, state, lcsMatrix) {
 				patch.push({ op: 'remove', path: p, context: context });
 			}
 
-			patch.push({ op: 'test', path: p, value: a1[j], context: context });
+			offset -= 1;
 
 		} else if (op === lcs.ADD) {
 			// See https://tools.ietf.org/html/rfc6902#section-4.1
 			// May use either index===length *or* '-' to indicate appending to array
-			patch.push({ op: 'add', path: path + '/' + j, value: a2[i],
+			patch.push({ op: 'add', path: p, value: a2[i],
 				context: state.context(3, j, a1)
 			});
 
+			offset += 1;
+
 		} else {
-			appendChanges(a1[j], a2[i], path + '/' + j, state);
+			appendChanges(a1[j], a2[i], p, state);
 		}
 
 		return state;
@@ -164,8 +166,8 @@ function defaultContext() {
 
 function appendValueChanges(a, b, path, state) {
 	if(a !== b) {
-		state.patch.push({ op: 'replace', path: path, value: b });
 		state.patch.push({ op: 'test',    path: path, value: a });
+		state.patch.push({ op: 'replace', path: path, value: b });
 	}
 
 	return state;
@@ -185,13 +187,10 @@ function map(f, a) {
 	return b;
 }
 
-function reverse(a) {
-	var l, r, tmp;
-	for(l = 0, r = a.length-1; l < r; ++l, --r) {
-		tmp = a[l];
-		a[l] = a[r];
-		a[r] = tmp;
-	}
+function orElse(p, x, y) {
+	return p(x) ? x : y;
+}
 
-	return a;
+function isFunction(x) {
+	return typeof x === 'function';
 }
