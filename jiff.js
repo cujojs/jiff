@@ -122,7 +122,7 @@ function lcsToJsonPatch(a1, a2, path, state, lcsMatrix) {
 		if (op === lcs.REMOVE) {
 			// Coalesce adjacent remove + add into replace
 			last = patch[patch.length-1];
-			context = state.context(3, j, a1);
+			context = state.context(j, a1);
 
 			patch.push({ op: 'test', path: p, value: a1[j], context: context });
 
@@ -139,7 +139,7 @@ function lcsToJsonPatch(a1, a2, path, state, lcsMatrix) {
 			// See https://tools.ietf.org/html/rfc6902#section-4.1
 			// May use either index===length *or* '-' to indicate appending to array
 			patch.push({ op: 'add', path: p, value: a2[i],
-				context: state.context(3, j, a1)
+				context: state.context(j, a1)
 			});
 
 			offset += 1;
@@ -151,13 +151,6 @@ function lcsToJsonPatch(a1, a2, path, state, lcsMatrix) {
 		return state;
 
 	}, state, lcsMatrix);
-}
-
-function getContext(size, i, array) {
-	return {
-		before: array.slice(Math.max(0, i-size), i),
-		after: array.slice(Math.min(array.length, i), i+size)
-	};
 }
 
 function defaultContext() {
