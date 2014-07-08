@@ -19,19 +19,39 @@ exports.InvalidPatchOperationError = require('./lib/InvalidPatchOperationError')
 exports.TestFailedError = require('./lib/TestFailedError');
 exports.PatchNotInvertibleError = require('./lib/PatchNotInvertibleError');
 
+var isValidObject = patch.isValidObject;
+var defaultHash = patch.defaultHash;
+
 /**
  * Compute a JSON Patch representing the differences between a and b.
  * @param {object|array|string|number|null} a
  * @param {object|array|string|number|null} b
- * @param {?function} hasher optional hashing function that will be used to
+ * @param {?function} options optional hashing function that will be used to
  *  recognize identical objects, defaults to JSON.stringify
  * @returns {array} JSON Patch such that patch(diff(a, b), a) ~ b
  */
-function diff(a, b, hasher) {
-	var hash = typeof hasher === 'function' ? hasher : defaultHash;
-	var state = { patch: [], hash: hash };
+function diff(a, b, options) {
+	var patch = appendChanges(a, b, '', initState(options)).patch;
+	return reverse(patch);
+}
 
-	return appendChanges(a, b, '', state).patch.reverse();
+function initState(options) {
+	var state;
+	if(typeof options === 'object') {
+		state = {
+			patch: [],
+			hash: typeof options.hash === 'function' ? options.hash : defaultHash,
+			context: typeof options.context === 'function' ? options.context : defaultContext
+		};
+	} else {
+		state = {
+			patch: [],
+			hash: typeof options === 'function' ? options : defaultHash,
+			context: defaultContext
+		};
+	}
+
+	return state;
 }
 
 function appendChanges(a, b, path, state) {
@@ -96,26 +116,30 @@ function appendListChanges(a1, a2, path, state) {
  */
 function lcsToJsonPatch(a1, a2, path, state, lcsMatrix) {
 	return lcs.reduce(function(state, op, i, j) {
-		var last, p;
+		var last, p, context;
+		var patch = state.patch;
+
 		if (op === lcs.REMOVE) {
 			p = path + '/' + j;
 
 			// Coalesce adjacent remove + add into replace
-			last = state.patch[state.patch.length-1];
+			last = patch[patch.length-1];
+			context = state.context(3, j, a1);
+
 			if(last !== void 0 && last.op === 'add' && last.path === p) {
 				last.op = 'replace';
+				last.context = context;
 			} else {
-				state.patch.push({ op: 'remove', path: p, value: void 0,
-					context: a1.slice(Math.max(0, j-2), Math.min(a1.length, j+3))
-				});
+				patch.push({ op: 'remove', path: p, context: context });
 			}
-			state.patch.push({ op: 'test', path: p, value: a1[j] });
+
+			patch.push({ op: 'test', path: p, value: a1[j], context: context });
 
 		} else if (op === lcs.ADD) {
 			// See https://tools.ietf.org/html/rfc6902#section-4.1
 			// May use either index===length *or* '-' to indicate appending to array
-			state.patch.push({ op: 'add', path: path + '/' + j, value: a2[i],
-				context: a1.slice(Math.max(0, j-2), Math.min(a1.length, j+3))
+			patch.push({ op: 'add', path: path + '/' + j, value: a2[i],
+				context: state.context(3, j, a1)
 			});
 
 		} else {
@@ -127,6 +151,17 @@ function lcsToJsonPatch(a1, a2, path, state, lcsMatrix) {
 	}, state, lcsMatrix);
 }
 
+function getContext(size, i, array) {
+	return {
+		before: array.slice(Math.max(0, i-size), i),
+		after: array.slice(Math.min(array.length, i), i+size)
+	};
+}
+
+function defaultContext() {
+	return void 0;
+}
+
 function appendValueChanges(a, b, path, state) {
 	if(a !== b) {
 		state.patch.push({ op: 'replace', path: path, value: b });
@@ -134,14 +169,6 @@ function appendValueChanges(a, b, path, state) {
 	}
 
 	return state;
-}
-
-function defaultHash(x) {
-	return isValidObject(x) ? JSON.stringify(x) : x;
-}
-
-function isValidObject (x) {
-	return x !== null && typeof x === 'object';
 }
 
 /**
@@ -156,4 +183,15 @@ function map(f, a) {
 		b[i] = f(a[i]);
 	}
 	return b;
+}
+
+function reverse(a) {
+	var l, r, tmp;
+	for(l = 0, r = a.length-1; l < r; ++l, --r) {
+		tmp = a[l];
+		a[l] = a[r];
+		a[r] = tmp;
+	}
+
+	return a;
 }
