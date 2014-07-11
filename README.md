@@ -40,7 +40,7 @@ console.log(JSON.stringify(patched));
 ### patch
 
 ```js
-var b = jiff.patch(patch, a);
+var b = jiff.patch(patch, a [, options]);
 ```
 
 Given an rfc6902 JSON Patch, apply it to `a` and return a new patched JSON object/array/value.  Patching is atomic, and is performed on a clone of `a`.  Thus, if patching fails mid-patch, `a` will still be in a consistent state.
@@ -50,7 +50,7 @@ Throws [InvalidPatchOperationError](#invalidpatchoperationerror) and [TestFailed
 ### patchInPlace
 
 ```js
-a = jiff.patchInPlace(patch, a);
+a = jiff.patchInPlace(patch, a [, options]);
 ```
 
 Given an rfc6902 JSON Patch, apply it directly to `a`, *mutating `a`*.
@@ -64,13 +64,18 @@ Throws [InvalidPatchOperationError](#invalidpatchoperationerror) and [TestFailed
 ### diff
 
 ```js
-var patch = jiff.diff(a, b [, hashFunction]);
+var patch = jiff.diff(a, b [, hashFunction | options]);
 ```
 
-Computes and returns a JSON Patch from `a` to `b`: `a` and `b` must be valid JSON objects/arrays/values of the same type. If `patch` is applied to `a`, it will yield `b`.
+Computes and returns a JSON Patch from `a` to `b`: `a` and `b` must be valid JSON objects/arrays/values. If `patch` is applied to `a`, it will yield `b`.
 
-If provided, the optional `hashFunction` will be used to recognize when two objects are the same.  If not provided, `JSON.stringify` will be used.
+The optional third parameter can be either an `options` object or a function, (for backward compatibility).
 
+* `options`:
+    * `options.hash : function(x) -> string|number`: same as `hashFunction`
+    * `options.context : function(index, array) -> { before: [...], after: [...] }`: **Experimental** a function that will be called for each item added or removed from an array.  It should return an object containing two Arrays, `before` and `after`
+* `hashFunction(x) -> string|number`: used to recognize when two objects are the same.  If not provided, `JSON.stringify` will be used.
+	
 While jiff's patch algorithm handles all the JSON Patch operations required by rfc6902, the diff algorithm currently does not generate `move`, or `copy` operations, only `add`, `remove`, and `replace`.
 
 ### inverse

@@ -3,6 +3,7 @@
 /** @author John Hann */
 
 var lcs = require('./lib/lcs');
+var array = require('./lib/array');
 var patch = require('./lib/jsonPatch');
 var inverse = require('./lib/inverse');
 var jsonPointer = require('./lib/jsonPointer');
@@ -26,36 +27,52 @@ var defaultHash = patch.defaultHash;
  * Compute a JSON Patch representing the differences between a and b.
  * @param {object|array|string|number|null} a
  * @param {object|array|string|number|null} b
- * @param {?function} options optional hashing function that will be used to
- *  recognize identical objects, defaults to JSON.stringify
+ * @param {?function|?object} options if a function, see options.hash
+ * @param {?function(x:*):String|Number} options.hash used to hash array items
+ *  in order to recognize identical objects, defaults to JSON.stringify
+ * @param {?function(index:Number, array:Array):object} options.makeContext
+ *  used to generate patch context. If not provided, context will not be generated
  * @returns {array} JSON Patch such that patch(diff(a, b), a) ~ b
  */
 function diff(a, b, options) {
 	return appendChanges(a, b, '', initState(options, [])).patch;
 }
 
+/**
+ * Create initial diff state from the provided options
+ * @param {?function|?object} options @see diff options above
+ * @param {array} patch an empty or existing JSON Patch array into which
+ *  the diff should generate new patch operations
+ * @returns {object} initialized diff state
+ */
 function initState(options, patch) {
-	var state;
 	if(typeof options === 'object') {
-		state = {
+		return {
 			patch: patch,
 			hash: orElse(isFunction, options.hash, defaultHash),
-			context: orElse(isFunction, options.context, defaultContext)
+			makeContext: orElse(isFunction, options.makeContext, defaultContext)
 		};
 	} else {
-		state = {
+		return {
 			patch: patch,
 			hash: orElse(isFunction, options, defaultHash),
-			context: defaultContext
+			makeContext: defaultContext
 		};
 	}
-
-	return state;
 }
 
+/**
+ * Given two JSON values (object, array, number, string, etc.), find their
+ * differences and append them to the diff state
+ * @param {object|array|string|number|null} a
+ * @param {object|array|string|number|null} ab
+ * @param {string} path
+ * @param {object} state
+ * @returns {Object} updated diff state
+ */
 function appendChanges(a, b, path, state) {
 	if(Array.isArray(a) && Array.isArray(b)) {
-		return appendListChanges(a, b, path, state);
+		return appendArrayChanges(a, b, path, state);
 	}
 
 	if(isValidObject(a) && isValidObject(b)) {
@@ -65,6 +82,14 @@ function appendChanges(a, b, path, state) {
 	return appendValueChanges(a, b, path, state);
 }
 
+/**
+ * Given two objects, find their differences and append them to the diff state
+ * @param {object} o1
+ * @param {object} o2
+ * @param {string} path
+ * @param {object} state
+ * @returns {Object} updated diff state
+ */
 function appendObjectChanges(o1, o2, path, state) {
 	var keys = Object.keys(o2);
 	var patch = state.patch;
@@ -93,9 +118,17 @@ function appendObjectChanges(o1, o2, path, state) {
 	return state;
 }
 
-function appendListChanges(a1, a2, path, state) {
-	var a1hash = map(state.hash, a1);
-	var a2hash = map(state.hash, a2);
+/**
+ * Given two arrays, find their differences and append them to the diff state
+ * @param {array} a1
+ * @param {array} a2
+ * @param {string} path
+ * @param {object} state
+ * @returns {Object} updated diff state
+ */
+function appendArrayChanges(a1, a2, path, state) {
+	var a1hash = array.map(state.hash, a1);
+	var a2hash = array.map(state.hash, a2);
 
 	var lcsMatrix = lcs.compare(a1hash, a2hash);
 
@@ -105,12 +138,13 @@ function appendListChanges(a1, a2, path, state) {
 /**
  * Transform an lcsMatrix into JSON Patch operations and append
  * them to state.patch, recursing into array elements as necessary
- * @param a1
- * @param a2
- * @param path
- * @param state
- * @param lcsMatrix
- * @returns {*}
+ * @param {array} a1
+ * @param {array} a2
+ * @param {string} path
+ * @param {object} state
+ * @param {object} lcsMatrix
+ * @returns {object} new state with JSON Patch operations added based
+ *  on the provided lcsMatrix
  */
 function lcsToJsonPatch(a1, a2, path, state, lcsMatrix) {
 	var offset = 0;
@@ -122,7 +156,7 @@ function lcsToJsonPatch(a1, a2, path, state, lcsMatrix) {
 		if (op === lcs.REMOVE) {
 			// Coalesce adjacent remove + add into replace
 			last = patch[patch.length-1];
-			context = state.context(j, a1);
+			context = state.makeContext(j, a1);
 
 			patch.push({ op: 'test', path: p, value: a1[j], context: context });
 
@@ -139,7 +173,7 @@ function lcsToJsonPatch(a1, a2, path, state, lcsMatrix) {
 			// See https://tools.ietf.org/html/rfc6902#section-4.1
 			// May use either index===length *or* '-' to indicate appending to array
 			patch.push({ op: 'add', path: p, value: a2[i],
-				context: state.context(j, a1)
+				context: state.makeContext(j, a1)
 			});
 
 			offset += 1;
@@ -153,10 +187,14 @@ function lcsToJsonPatch(a1, a2, path, state, lcsMatrix) {
 	}, state, lcsMatrix);
 }
 
-function defaultContext() {
-	return void 0;
-}
-
+/**
+ * Given two number|string|null values, if they differ, append to diff state
+ * @param {string|number|null} a
+ * @param {string|number|null} b
+ * @param {string} path
+ * @param {object} state
+ * @returns {object} updated diff state
+ */
 function appendValueChanges(a, b, path, state) {
 	if(a !== b) {
 		state.patch.push({ op: 'test',    path: path, value: a });
@@ -167,23 +205,27 @@ function appendValueChanges(a, b, path, state) {
 }
 
 /**
- * Faster than Array.prototype.map
- * @param {function} f
- * @param {Array} a
- * @returns {Array} new Array mapped by f
+ * @param {function} predicate
+ * @param {*} x
+ * @param {*} y
+ * @returns {*} x if predicate(x) is truthy, otherwise y
  */
-function map(f, a) {
-	var b = new Array(a.length);
-	for(var i=0; i< a.length; ++i) {
-		b[i] = f(a[i]);
-	}
-	return b;
+function orElse(predicate, x, y) {
+	return predicate(x) ? x : y;
 }
 
-function orElse(p, x, y) {
-	return p(x) ? x : y;
+/**
+ * Default patch context generator
+ * @returns {undefined} undefined context
+ */
+function defaultContext() {
+	return void 0;
 }
 
+/**
+ * @param {*} x
+ * @returns {boolean} true if x is a function, false otherwise
+ */
 function isFunction(x) {
 	return typeof x === 'function';
 }
