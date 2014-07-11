@@ -108,17 +108,18 @@ As of v0.2, `jiff.diff` and `jiff.patch` support [patch contexts](http://en.wiki
 
 Using patch contexts can greatly improve patch accuracy for arrays, at the cost of increasing the size of patches.
 
-Patch contexts are supported via a pair of closely related functions: `makeContext` and `findContext`.
+Patch contexts are entirely opt-in. To use them, you must provide a pair of closely related functions: `makeContext` and `findContext`.  An API for creating default `makeContext` and `findContext` functions is provided in [`jiff/lib/context`](#jifflibcontext), or you can implement your own.
 
-If you supply the optional `makeContext` function to `jiff.diff`, it will be used to generated a context for each change to an array.
+When you supply the optional `makeContext` function to `jiff.diff`, it will be used to generated a context for each change to an array.
 
-Likewise, if you supply the optional `findContext` function to `jiff.patch` (or `jiff.patchInPlace`), it will be used to find adjusted array indices where patches should actually be applied.
+Likewise, when you supply the optional `findContext` function to `jiff.patch` (or `jiff.patchInPlace`), it will be used to find adjusted array indices where patches should actually be applied.
 
-The context is opaque, and jiff will not attempt to inspect or use it: `jiff.diff` will simply add whatever is returned by `makeContext` to patch operations, and `jiff.patch` will simply hand it to `findContext` when it sees a context in a patch operation.
+The context is opaque, and jiff itself will not attempt to inspect or interpret it: `jiff.diff` will simply add whatever is returned by `makeContext` to patch operations, and `jiff.patch` will simply hand it to `findContext` when it sees a context in a patch operation.
 
-An API for creating default `makeContext` and `findContext` functions is provided in [`jiff/lib/context`](#jifflibcontext).
 
 ## Experimental APIs
+
+These APIs are still considered experimental, signatures may change.
 
 ### jiff/lib/context
 
