@@ -72,7 +72,7 @@ var patch = jiff.diff(a, b [, hashFunction | options]);
 
 Computes and returns a JSON Patch from `a` to `b`: `a` and `b` must be valid JSON objects/arrays/values. If `patch` is applied to `a`, it will yield `b`.
 
-The optional third parameter can be *either* an `options` object (preferably) or a function, (for backward compatibility).
+The optional third parameter can be *either* an `options` object (preferably) or a function (deprecated: allowed backward compatibility).
 
 * `options`:
     * `options.hash : function(x) -> string|number`: used to recognize when two objects are the same.  If not provided, `JSON.stringify` will be used.
@@ -92,7 +92,7 @@ Compute an inverse patch.  Applying the inverse of a patch will undo the effect 
 Due to the current JSON Patch format defined in rfc6902, not all patches can be inverted.  To be invertible, a patch must have the following characteristics:
 
 1. Each `remove` and `replace` operation must be preceded by a `test` operation that verifies the `value` at the `path` being removed/replaced.
-2. The patch must *not* contain any `copy` operations.  Read [this discussion](https://github.com/cujojs/jiff/issues/9) to understand why `copy` operations are not (yet) invertible. You can achieve the same effect by using `add` instead of `copy`, albeit potentially at the cost of data size.
+2. The patch must *not* contain any `copy` operations.  Read [this discussion](https://github.com/cujojs/jiff/issues/9) to understand why `copy` operations are not (yet) invertible. You can achieve the same effect by using `add` instead of `copy`, albeit potentially at the cost of increased patch size.
 
 ### clone
 
@@ -136,10 +136,10 @@ var findContext = context.makeContextFinder(equals);
 Provides simple, but effective default implementations of `makeContext` and `findContext` functions that can be passed to `jiff.diff` and `jiff.patch` to take advantage of smarter array patching.
 
 `context.makeContext(size)` *returns* a function that can be passed as `options.makeContext` to `jiff.diff`.
-    * `size: number` is the number of array items before and after each change to include in the patch.
+	* `size: number` is the number of array items before and after each change to include in the patch.
 
 `context.makeContextFinder(equals)` *returns* a function that can be passed as `options.findContext` to `jiff.patch`.
-    * `equals: function(a, b) -> boolean` a function to compare two array items, must return truthy when `a` and `b` are equal, falsy otherwise.
+	* `equals: function(a, b) -> boolean` a function to compare two array items, must return truthy when `a` and `b` are equal, falsy otherwise.
 
 ### jiff/lib/rebase
 
