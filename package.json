@@ -1,6 +1,6 @@
 {
   "name": "jiff",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "JSON diff and patch based on rfc6902",
   "main": "jiff",
   "scripts": {
