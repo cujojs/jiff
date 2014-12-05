@@ -65,7 +65,7 @@ function initState(options, patch) {
  * Given two JSON values (object, array, number, string, etc.), find their
  * differences and append them to the diff state
  * @param {object|array|string|number|null} a
- * @param {object|array|string|number|null} ab
+ * @param {object|array|string|number|null} b
  * @param {string} path
  * @param {object} state
  * @returns {Object} updated diff state
