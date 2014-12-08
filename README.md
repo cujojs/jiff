@@ -102,6 +102,12 @@ var b = jiff.clone(a);
 
 Creates a deep copy of `a`, which must be a valid JSON object/array/value.
 
+**NOTE:** In jiff &lt;= 0.6.x, `jiff.clone` incorrectly caused some ISO Date-formatted strings (eg `"2014-12-03T11:40:16.816Z"`) to be turned into `Date` objects.  Thus, a clone *might not end up as an exact copy*.
+
+That was fixed in 0.7.0: `jiff.clone` creates exact copies.
+
+If you have code that depended on that hidden deserialization, *it will break*.  Date deserialization is now the responsibility of the party who parsed the JSON string from which the original object/array/etc. (ie, the one passed to `jiff.clone`) was created.
+
 ### Patch context
 
 As of v0.2, `jiff.diff` and `jiff.patch` support [patch contexts](http://en.wikipedia.org/wiki/Diff#Context_format), an extra bit of information carried with each patch operation.  Patch contexts allow smarter patching, especially in the case of arrays, where items may have moved and thus their indices changed.
