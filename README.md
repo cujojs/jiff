@@ -47,7 +47,7 @@ Given an rfc6902 JSON Patch, apply it to `a` and return a new patched JSON objec
 
 * `options`
     * `options.findContext : function(index, array, context) -> number`: **Experimental** function to be called before each change to an array.  It is passed the array and index of the change, *and* a patch context (see [`options.makeContext` below](#diff)).  It should return an adjusted index at which the change will actually be applied. This allows for smart patching of arrays that may have changed since the patch was created.
-    
+
 Throws [InvalidPatchOperationError](#invalidpatchoperationerror) and [TestFailedError](#testfailederror).
 
 ### patchInPlace
@@ -75,10 +75,11 @@ Computes and returns a JSON Patch from `a` to `b`: `a` and `b` must be valid JSO
 The optional third parameter can be *either* an `options` object (preferably) or a function (deprecated: allowed backward compatibility).
 
 * `options`:
-    * `options.hash : function(x) -> string|number`: used to recognize when two objects are the same.  If not provided, `JSON.stringify` will be used.
-    * `options.makeContext : function(index, array) -> *`: **Experimental** function that will be called for each item added or removed from an array.  It can return *any* legal JSON value or undefined, which if not `null` or undefined, will be fed directly to the `findContext` function provided to [`jiff.patch`](#patch).
+	* `options.hash : function(x) -> string|number`: used to recognize when two objects are the same.  If not provided, `JSON.stringify` will be used.
+	* `options.makeContext : function(index, array) -> *`: **Experimental** function that will be called for each item added or removed from an array.  It can return *any* legal JSON value or undefined, which if not `null` or undefined, will be fed directly to the `findContext` function provided to [`jiff.patch`](#patch).
+	* `options.invertible : boolean`: by default, jiff generates patches containing extra `test` operations to ensure they are invertible via [`jiff.inverse`](#inverse).  When `options.invertible === false` will omit the extra `test` operations. This will result in smaller patches, but they will not be invertible.
 * `hashFunction(x) -> string|number`: same as `options.hash` above
-	
+
 While jiff's patch algorithm handles all the JSON Patch operations required by rfc6902, the diff algorithm currently does not generate `move`, or `copy` operations, only `add`, `remove`, and `replace`.
 
 ### inverse
@@ -168,9 +169,9 @@ var [p2c, p1c] = commute(p1, p2);
 ```
 
 Given two patches `p1` and `p2`, which are intended to be applied in the order `p1` then `p2`, transform them so that they can be safely applied in the order `p2c` and then `p1c`.
- 
+
  Commutation is currently *highly experimental*.  It works for patch operations whose path refers to a common array ancestor by transforming array indices.  Operations that share a common object ancestor are simply swapped for now, which is likely not the right thing in most cases!
- 
+
  Commutation does attempt to detect operations that cannot be commuted, and in such cases, will throw a `TypeError`.
 
 ## Errors

@@ -50,13 +50,15 @@ function initState(options, patch) {
 		return {
 			patch: patch,
 			hash: orElse(isFunction, options.hash, defaultHash),
-			makeContext: orElse(isFunction, options.makeContext, defaultContext)
+			makeContext: orElse(isFunction, options.makeContext, defaultContext),
+			invertible: !(options.invertible === false)
 		};
 	} else {
 		return {
 			patch: patch,
 			hash: orElse(isFunction, options, defaultHash),
-			makeContext: defaultContext
+			makeContext: defaultContext,
+			invertible: true
 		};
 	}
 }
@@ -110,7 +112,9 @@ function appendObjectChanges(o1, o2, path, state) {
 		key = keys[i];
 		if(o2[key] === void 0) {
 			var p = path + '/' + encodeSegment(key);
-			patch.push({ op: 'test',   path: p, value: o1[key] });
+			if(state.invertible) {
+				patch.push({ op: 'test', path: p, value: o1[key] });
+			}
 			patch.push({ op: 'remove', path: p });
 		}
 	}
@@ -158,7 +162,9 @@ function lcsToJsonPatch(a1, a2, path, state, lcsMatrix) {
 			last = patch[patch.length-1];
 			context = state.makeContext(j, a1);
 
-			patch.push({ op: 'test', path: p, value: a1[j], context: context });
+			if(state.invertible) {
+				patch.push({ op: 'test', path: p, value: a1[j], context: context });
+			}
 
 			if(last !== void 0 && last.op === 'add' && last.path === p) {
 				last.op = 'replace';
@@ -197,7 +203,10 @@ function lcsToJsonPatch(a1, a2, path, state, lcsMatrix) {
  */
 function appendValueChanges(a, b, path, state) {
 	if(a !== b) {
-		state.patch.push({ op: 'test',    path: path, value: a });
+		if(state.invertible) {
+			state.patch.push({ op: 'test', path: path, value: a });
+		}
+
 		state.patch.push({ op: 'replace', path: path, value: b });
 	}
 

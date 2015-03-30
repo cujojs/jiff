@@ -60,6 +60,28 @@ buster.testCase('jiff', {
 				assert(patch[0].path === '/-' || patch[0].path === '/0');
 				assert.same(patch[0].value, 1);
 			}
+		},
+
+		'invertible': {
+			'when false': {
+				'should not generate extra test ops for array remove': function() {
+					var patch = jiff.diff([1,2,3], [1,3], { invertible: false });
+					assert.equals(patch.length, 1);
+					assert.equals(patch[0].op, 'remove');
+				},
+
+				'should not generate extra test ops for object remove': function() {
+					var patch = jiff.diff({ foo: 1 }, {}, { invertible: false });
+					assert.equals(patch.length, 1);
+					assert.equals(patch[0].op, 'remove');
+				},
+
+				'should not generate extra test ops for replace': function() {
+					var patch = jiff.diff({ foo: 1 }, { foo: 2 }, { invertible: false });
+					assert.equals(patch.length, 1);
+					assert.equals(patch[0].op, 'replace');
+				}
+			}
 		}
 	}
 });
