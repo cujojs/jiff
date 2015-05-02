@@ -82,6 +82,18 @@ buster.testCase('jiff', {
 					assert.equals(patch[0].op, 'replace');
 				}
 			}
+		},
+
+		'on mixed types': {
+			'should generate replace': function() {
+				var a = { 'test': ['x'] };
+				var b = { 'test': { 'a': "x" } };
+
+				var patch = jiff.diff(a, b, { invertible: false });
+				assert.equals(patch.length, 1);
+				assert.equals(patch[0].op, 'replace');
+				assert.equals(b, jiff.patch(patch, a));
+			}
 		}
 	}
 });
