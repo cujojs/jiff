@@ -1,7 +1,7 @@
 {
   "name": "jiff",
   "main": "jiff.js",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "authors": [
     "Brian Cavalier <brian@hovercraftstudios.com>"
   ],
