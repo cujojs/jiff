@@ -17,9 +17,10 @@
   "author": "brian@hovercraftstudios.com",
   "license": "MIT",
   "devDependencies": {
-    "jshint": "~2",
     "buster": "~0.7",
-    "gent": "0.6.2"
+    "gent": "0.6.2",
+    "jshint": "~2",
+    "json-patch-test-suite": "^1.0.1"
   },
   "repository": {
     "type": "git",

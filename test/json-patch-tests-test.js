@@ -4,8 +4,8 @@ var deepEquals = require('../lib/deepEquals');
 
 var jsonPatch = require('../lib/jsonPatch');
 
-var specTests = require('./json-patch-tests/spec_tests.json');
-var tests = require('./json-patch-tests/tests.json');
+var specTests = require('json-patch-test-suite/spec_tests.json');
+var tests = require('json-patch-test-suite/tests.json');
 
 buster.testCase('json-patch-tests', {
 	'spec_tests.json': jsonToBuster(specTests),
