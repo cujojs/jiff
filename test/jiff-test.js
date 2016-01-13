@@ -49,6 +49,38 @@ buster.testCase('jiff', {
 				json.array(1, json.object()),
 				json.array(1, json.object())
 			);
+		},
+
+		'for arrays of arrays': function() {
+			assert(deepEqualAfterDiffPatch()(
+				[['a'],['b'],['c']],
+				[['b']]
+			));
+
+			assert(deepEqualAfterDiffPatch()(
+				[['a']],
+				[['b']]
+			));
+
+			assert(deepEqualAfterDiffPatch()(
+				[['a'],['b'],['c']],
+				[['d']]
+			));
+
+			assert(deepEqualAfterDiffPatch()(
+				[['b']],
+				[['a'],['b'],['c']]
+			));
+
+			assert(deepEqualAfterDiffPatch()(
+				[['d']],
+				[['a'],['b'],['c']]
+			));
+
+			assert.claim(deepEqualAfterDiffPatch(),
+				json.array(1, json.array()),
+				json.array(1, json.array())
+			);
 		}
 	},
 
