@@ -1,6 +1,7 @@
 var buster = require('buster');
 require('gent/test-adapter/buster');
 var assert = buster.referee.assert;
+var refute = buster.referee.refute;
 var gent = require('gent');
 var json = require('gent/generator/json');
 var deepEquals = require('../lib/deepEquals');
@@ -49,6 +50,38 @@ buster.testCase('jiff', {
 				json.array(1, json.object()),
 				json.array(1, json.object())
 			);
+		},
+
+		'for arrays of arrays': function() {
+			assert(deepEqualAfterDiffPatch()(
+				[['a'],['b'],['c']],
+				[['b']]
+			));
+
+			assert(deepEqualAfterDiffPatch()(
+				[['a']],
+				[['b']]
+			));
+
+			assert(deepEqualAfterDiffPatch()(
+				[['a'],['b'],['c']],
+				[['d']]
+			));
+
+			assert(deepEqualAfterDiffPatch()(
+				[['b']],
+				[['a'],['b'],['c']]
+			));
+
+			assert(deepEqualAfterDiffPatch()(
+				[['d']],
+				[['a'],['b'],['c']]
+			));
+
+			assert.claim(deepEqualAfterDiffPatch(),
+				json.array(1, json.array()),
+				json.array(1, json.array())
+			);
 		}
 	},
 
@@ -59,6 +92,34 @@ buster.testCase('jiff', {
 				assert.equals(patch[0].op, 'add');
 				assert(patch[0].path === '/-' || patch[0].path === '/0');
 				assert.same(patch[0].value, 1);
+			},
+			'with default hash function': {
+				'primitives as elements': {
+					'should generate an empty patch when elements are equal': function() {
+						var patch = jiff.diff([1,'a',true], [1,'a',true]);
+						assert.equals(patch.length, 0);
+					}
+				},
+				'arrays as elements': {
+					'should generate an empty patch when elements are equal': function() {
+						var patch = jiff.diff([['a'],['b'],['c']], [['a'],['b'],['c']]);
+						assert.equals(patch.length, 0);
+					}
+				},
+				'objects as elements': {
+					'object keys with consistent order': {
+						'should generate an empty patch when elements are equal': function() {
+							var patch = jiff.diff([{a:'a',b:'b',c:'c'}], [{a:'a',b:'b',c:'c'}]);
+							assert.equals(patch.length, 0);
+						}
+					},
+					'object keys with inconsistent order': {
+						'should generate a non empty patch even though elements are equal': function() {
+							var patch = jiff.diff([{b:'b',c:'c',a:'a'}], [{a:'a',b:'b',c:'c'}]);
+							refute.equals(patch.length, 0);
+						}
+					}
+				}
 			}
 		},
 
