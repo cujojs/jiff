@@ -75,7 +75,7 @@ Computes and returns a JSON Patch from `a` to `b`: `a` and `b` must be valid JSO
 The optional third parameter can be *either* an `options` object (preferably) or a function (deprecated: allowed backward compatibility).
 
 * `options`:
-	* `options.hash : function(x) -> string|number`: used to recognize when two objects are the same.  If not provided, `JSON.stringify` will be used for *objects*, and simply returns `x` for all other values (including arrays).
+	* `options.hash : function(x) -> string|number`: used to recognize when two objects are the same.  If not provided, `JSON.stringify` will be used for objects and arrays, and simply returns `x` for all other primitive values.
 	* `options.makeContext : function(index, array) -> *`: **Experimental** function that will be called for each item added or removed from an array.  It can return *any* legal JSON value or undefined, which if not `null` or undefined, will be fed directly to the `findContext` function provided to [`jiff.patch`](#patch).
 	* `options.invertible : boolean`: by default, jiff generates patches containing extra `test` operations to ensure they are invertible via [`jiff.inverse`](#inverse).  When `options.invertible === false` will omit the extra `test` operations. This will result in smaller patches, but they will not be invertible.
 * `hashFunction(x) -> string|number`: same as `options.hash` above
