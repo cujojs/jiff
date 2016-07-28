@@ -93,6 +93,16 @@ buster.testCase('jiff', {
 				assert(patch[0].path === '/-' || patch[0].path === '/0');
 				assert.same(patch[0].value, 1);
 			},
+			'should coalesce add adjacent remove into replace': function() {
+				var patch = jiff.diff(['a', 'b', 'c'], ['a', 'z', 'c']);
+				assert.equals(patch.length, 2);
+				assert.equals(patch[0].op, 'test');
+				assert.equals(patch[0].path, '/1');
+				assert.equals(patch[0].value, 'b');
+				assert.equals(patch[1].op, 'replace');
+				assert.equals(patch[1].path, '/1');
+				assert.equals(patch[1].value, 'z');
+			},
 			'with default hash function': {
 				'primitives as elements': {
 					'should generate an empty patch when elements are equal': function() {
