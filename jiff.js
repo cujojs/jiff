@@ -153,7 +153,7 @@ function appendArrayChanges(a1, a2, path, state) {
 function lcsToJsonPatch(a1, a2, path, state, lcsMatrix) {
 	var offset = 0;
 	return lcs.reduce(function(state, op, i, j) {
-		var last, context;
+		var last, context, pOther;
 		var patch = state.patch;
 		var p = path + '/' + (j + offset);
 
@@ -162,14 +162,22 @@ function lcsToJsonPatch(a1, a2, path, state, lcsMatrix) {
 			last = patch[patch.length-1];
 			context = state.makeContext(j, a1);
 
-			if(state.invertible) {
-				patch.push({ op: 'test', path: p, value: a1[j], context: context });
-			}
+			// Decrement offset temporarily since adjacent add op incremented it
+			pOther = path + '/' + (j + offset - 1)
 
-			if(last !== void 0 && last.op === 'add' && last.path === p) {
+			if(last !== void 0 && last.op === 'add' && last.path === pOther) {
 				last.op = 'replace';
 				last.context = context;
+
+				// Insert a test op with the same path *before* the replace op
+				if(state.invertible) {
+					patch[patch.length-1] = { op: 'test', path: pOther, value: a1[j], context: context };
+					patch.push(last);
+				}
 			} else {
+				if(state.invertible) {
+					patch.push({ op: 'test', path: p, value: a1[j], context: context });
+				}
 				patch.push({ op: 'remove', path: p, context: context });
 			}
 
