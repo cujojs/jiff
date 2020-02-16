@@ -125,9 +125,10 @@ buster.testCase('jiff', {
 				var a = [1, 2];
 				var b = [3, 2];
 
-				var patch = jiff.diff(a, b, { invertible: false });
-				assert.equals(patch.length, 1);
-				assert.equals(patch[0].op, 'replace');
+				var patch = jiff.diff(a, b, { invertible: true });
+				assert.equals(patch.length, 2);
+				assert.equals(patch[0].op, 'test');
+				assert.equals(patch[1].op, 'replace');
 				assert.equals(b, jiff.patch(patch, a));
 			}
 		},
