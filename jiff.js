@@ -168,7 +168,7 @@ function lcsToJsonPatch(a1, a2, path, state, lcsMatrix) {
 				last.context = context;
 				// Insert a test before the replace operation in case invertible is true
 				if(state.invertible) {
-					patch.splice(patch.length - 2, 0, { op: 'test', path: prevP, value: a1[j], context: context })
+					patch.splice(patch.length - 1, 0, { op: 'test', path: prevP, value: a1[j], context: context })
 				}
 			} else {
 				if(state.invertible) {
