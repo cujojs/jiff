@@ -3,6 +3,7 @@
   "version": "0.7.3",
   "description": "JSON diff and patch based on rfc6902",
   "main": "jiff",
+  "jsdelivr": "./jiff.js",
   "scripts": {
     "test": "buster-test -e node"
   },
