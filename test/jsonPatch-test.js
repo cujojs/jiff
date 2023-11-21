@@ -21,6 +21,24 @@ buster.testCase('jsonPatch', {
 			assert.equals(result.value, 1);
 		},
 
+		'should replace String': function() {
+			var a = { value: 0 };
+			var result = jsonPatch.apply([{ op: 'add', path: '/value', value: new String("value") }], a);
+			assert.equals(result.value, "value");
+		},
+
+		'should replace Number': function() {
+			var a = { value: 0 };
+			var result = jsonPatch.apply([{ op: 'add', path: '/value', value: new Number(1) }], a);
+			assert.equals(result.value, 1);
+		},
+
+		'should replace Boolean': function() {
+			var a = { value: 0 };
+			var result = jsonPatch.apply([{ op: 'add', path: '/value', value: new Boolean(true) }], a);
+			assert.equals(result.value, true);
+		},
+
 		'should throw': {
 			'when path is invalid': function() {
 				assert.exception(function() {
