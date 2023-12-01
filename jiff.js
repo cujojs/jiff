@@ -161,15 +161,19 @@ function lcsToJsonPatch(a1, a2, path, state, lcsMatrix) {
 			// Coalesce adjacent remove + add into replace
 			last = patch[patch.length-1];
 			context = state.makeContext(j, a1);
+			prevP = path + '/' + (j + (offset - 1));
 
-			if(state.invertible) {
-				patch.push({ op: 'test', path: p, value: a1[j], context: context });
-			}
-
-			if(last !== void 0 && last.op === 'add' && last.path === p) {
+			if(last !== void 0 && last.op === 'add' && last.path === prevP) {
 				last.op = 'replace';
 				last.context = context;
+				// Insert a test before the replace operation in case invertible is true
+				if(state.invertible) {
+					patch.splice(patch.length - 1, 0, { op: 'test', path: prevP, value: a1[j], context: context })
+				}
 			} else {
+				if(state.invertible) {
+					patch.push({ op: 'test', path: p, value: a1[j], context: context });
+				}
 				patch.push({ op: 'remove', path: p, context: context });
 			}
 
