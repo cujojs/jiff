@@ -120,6 +120,60 @@ buster.testCase('jiff', {
 						}
 					}
 				}
+			},
+			'with custom hash function': {
+				'primitives as elements': {
+					'should generate an empty patch when elements are equal': function() {
+						var patch = jiff.diff([1, 'a', true], [1, 'a', true], {
+							hash: function (a) {
+								return JSON.stringify(a) + '_SUFFIX';
+							}
+						});
+						assert.equals(patch.length, 0);
+					}
+				},
+				'arrays as elements': {
+					'should generate an empty patch when elements are equal': function() {
+						var patch = jiff.diff([['a'], ['b'], ['c']], [['a'], ['b'], ['c']], {
+							hash: function (a) {
+								return JSON.stringify(a) + '_SUFFIX';
+							}
+						});
+						assert.equals(patch.length, 0);
+					}
+				},
+				'objects as elements': {
+					'object keys with consistent order': {
+						'should generate an empty patch when elements are equal': function() {
+							var patch = jiff.diff([{a: 'a', b: 'b', c: 'c'}], [{a: 'a', b: 'b', c: 'c'}], {
+								hash: function (a) {
+									return JSON.stringify(a) + '_SUFFIX';
+								}
+							});
+							assert.equals(patch.length, 0);
+						}
+					},
+					'object keys with inconsistent order': {
+						'should generate a non empty patch even though elements are equal': function() {
+							var patch = jiff.diff([{b: 'b', c: 'c', a: 'a'}], [{a: 'a', b: 'b', c: 'c'}], {
+								hash: function (a) {
+									return JSON.stringify(a) + '_SUFFIX';
+								}
+							});
+							refute.equals(patch.length, 0);
+						}
+					}
+				},
+				'when custom hash ignores value': function() {
+					var patch = jiff.diff([1], [2], {
+						invertible: false,
+						hash: function (a) {
+							return typeof a;
+						}
+					});
+
+					assert.equals(patch.length, 0);
+				}
 			}
 		},
 

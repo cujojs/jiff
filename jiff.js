@@ -202,7 +202,7 @@ function lcsToJsonPatch(a1, a2, path, state, lcsMatrix) {
  * @returns {object} updated diff state
  */
 function appendValueChanges(a, b, path, state) {
-	if(a !== b) {
+	if(state.hash(a) !== state.hash(b)) {
 		if(state.invertible) {
 			state.patch.push({ op: 'test', path: path, value: a });
 		}
